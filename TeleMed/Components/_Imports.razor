@@ -9,3 +9,15 @@
 @using TeleMed
 @using TeleMed.Client
 @using TeleMed.Components
+
+@using TeleMed.Services
+@using TeleMed.DTOs
+@using TeleMed.Responses
+@using TeleMed.States
+@using Microsoft.AspNetCore.Components.Authorization
+@using static TeleMed.Responses.CustomResponses
+
+@inject IAccountService AccountService
+@inject IJSRuntime js
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider

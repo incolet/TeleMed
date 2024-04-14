@@ -55,7 +55,7 @@ namespace TeleMed.Repos
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<RegistrationResponse> RegisterAsync(RegisterDTO model)
+        public RegistrationResponse RegisterAsync(RegisterDTO model)
         {
             var findUser =  GetUser(model.Email);
             if (findUser != null) return new RegistrationResponse(false, "User already exist");
@@ -67,15 +67,15 @@ namespace TeleMed.Repos
                 Password = BCrypt.Net.BCrypt.HashPassword(model.Password)
             });
 
-            await appDbContext.SaveChangesAsync();
+            appDbContext.SaveChangesAsync();
             return new RegistrationResponse(true, "Success");
         }
 
         private ApplicationUser GetUser(string email)
         {
-            var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Email == email).Result;
+           var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Email == email).Result;
 
-            return user ?? null!;
+           return user ?? null!;
         }
     }
 }

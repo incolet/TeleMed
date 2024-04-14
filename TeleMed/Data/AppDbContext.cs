@@ -13,7 +13,8 @@ namespace TeleMed.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // You can configure relationships, indexes, etc., here if needed
+            modelBuilder.HasDefaultSchema("dbo");
         }
+
     }
 }

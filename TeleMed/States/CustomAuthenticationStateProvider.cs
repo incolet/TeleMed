@@ -17,7 +17,7 @@ namespace TeleMed.States
                     return await Task.FromResult(new AuthenticationState(anonymous));
 
                 var getUserClaims = DecryptToken(Constants.JwtToken);
-                if (getUserClaims == null)
+                if (getUserClaims is null || getUserClaims.Name is null || getUserClaims.Email is null)
                     return await Task.FromResult(new AuthenticationState(anonymous));
                 var claimsPrincipal = SetClaimPrincipal(getUserClaims);
                 return await Task.FromResult(new AuthenticationState(claimsPrincipal));
@@ -46,7 +46,7 @@ namespace TeleMed.States
 
         private CustomUserClaims DecryptToken(string jwtToken)
         {
-            if (!string.IsNullOrEmpty(jwtToken)) return new CustomUserClaims();
+            if (string.IsNullOrEmpty(jwtToken)) return new CustomUserClaims();
 
             var handler = new JwtSecurityTokenHandler();
             var token = handler.ReadJwtToken(jwtToken);
