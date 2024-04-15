@@ -1,4 +1,5 @@
 using TeleMed.DTOs;
+using TeleMed.DTOs.Appointment;
 using static TeleMed.Responses.CustomResponses;
 
 namespace TeleMed.Repos.Abstracts;

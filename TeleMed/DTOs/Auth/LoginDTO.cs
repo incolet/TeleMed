@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TeleMed.DTOs
+namespace TeleMed.DTOs.Auth
 {
     public class LoginDTO
     {

@@ -1,5 +1,6 @@
 ﻿
 @page "/login"
+@using TeleMed.DTOs.Auth
 
 @rendermode InteractiveServer
 <div class="container ">
@@ -36,7 +37,7 @@
 
     private async void LoginClicked()
     {
-        LoginResponse response = await AccountService.LoginAsync(Login);
+        LoginResponse response = await AccountsService.LoginAsync(Login);
         if (!response.Flag)
         {
             await js.InvokeVoidAsync("alert", response.Message);

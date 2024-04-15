@@ -1,7 +1,4 @@
-﻿using TeleMed.DTOs;
-using TeleMed.Responses;
-using System;
-using TeleMed.Data;
+﻿using TeleMed.Data;
 using static TeleMed.Responses.CustomResponses;
 using TeleMed.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,31 +6,25 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using TeleMed.DTOs.Auth;
 using TeleMed.Repos.Abstracts;
+using TeleMed.States;
 
 namespace TeleMed.Repos
 {
-    public class Account : IAccount
+    public class Account(AppDbContext appDbContext, IConfiguration config) : IAccount
     {
-        private readonly AppDbContext appDbContext;
-        private readonly IConfiguration config;
-
-        public Account(AppDbContext appDbContext, IConfiguration config)
-        {
-            this.appDbContext = appDbContext;
-            this.config = config;
-        }
         public LoginResponse LoginAsync(LoginDTO model)
         {
 
             var findUser = GetUser(model.Email);
-            if (findUser is null) 
+            if (findUser.Id < 1) 
                 return new LoginResponse(false, "User doesn't exist");
 
-            if (!BCrypt.Net.BCrypt.Verify(model.Password, findUser?.Password))
+            if (!BCrypt.Net.BCrypt.Verify(model.Password, findUser.Password))
                 return new LoginResponse(false, "Email/Password not valid");
             
-            string jwtToken = GenerateToken(findUser!);
+            string jwtToken = GenerateToken(findUser);
 
             return new LoginResponse(true, "Login Success" , jwtToken);
         }
@@ -56,7 +47,7 @@ namespace TeleMed.Repos
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public (RegistrationResponse,int) RegisterAsync(RegisterDTO model)
+        public (RegistrationResponse,int) RegisterAsync(RegisterDto model)
         {
             var findUser =  GetUser(model.Email);
             if (findUser.Id > 1) 
@@ -88,6 +79,23 @@ namespace TeleMed.Repos
            var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Id == id).Result;
 
            return user ?? null!;
+        }
+
+        public LoginResponse RefreshToken(UserSession userSession)
+        {
+            CustomUserClaims getUserClaims = DecryptJwtToken.DecryptToken(userSession.JwtToken);
+            if (string.IsNullOrEmpty(getUserClaims.Name) || string.IsNullOrEmpty(getUserClaims.Email))
+                return new LoginResponse(false, "Invalid Token");
+            
+            string newToken = GenerateToken(new ApplicationUser()
+            {
+                Name = getUserClaims.Name,
+                Email = getUserClaims.Email,
+                Role = getUserClaims.Role
+            });
+            
+            return new LoginResponse(true, "Token Refreshed", newToken);
+            
         }
     }
 }

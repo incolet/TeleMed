@@ -51,7 +51,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IAccount,Account>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["API_URL"]) });
 
-builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IAccountsService, AccountsService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
 

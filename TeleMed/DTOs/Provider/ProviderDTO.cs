@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TeleMed.DTOs;
+namespace TeleMed.DTOs.Provider;
 
 public class ProviderDto
 {

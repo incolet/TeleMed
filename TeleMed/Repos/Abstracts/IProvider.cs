@@ -1,4 +1,5 @@
 using TeleMed.DTOs;
+using TeleMed.DTOs.Provider;
 using TeleMed.Models;
 using static TeleMed.Responses.CustomResponses;
 

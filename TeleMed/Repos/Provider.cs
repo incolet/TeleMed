@@ -1,5 +1,7 @@
 using TeleMed.Data;
 using TeleMed.DTOs;
+using TeleMed.DTOs.Auth;
+using TeleMed.DTOs.Provider;
 using TeleMed.Models;
 using TeleMed.Repos.Abstracts;
 using TeleMed.Responses;
@@ -28,7 +30,7 @@ public class Provider (IAccount accountRepo, AppDbContext appDbContext)
                 return (new CustomResponses.ProviderResponse(false, "User already exist"));
             
             //Create User in the database
-            var registerResponse = accountRepo.RegisterAsync(new RegisterDTO
+            var registerResponse = accountRepo.RegisterAsync(new RegisterDto
             {
                 Email = providerDto.Email,
                 Password = providerDto.LastName,

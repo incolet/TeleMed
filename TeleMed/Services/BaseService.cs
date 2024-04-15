@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Xml;
+using TeleMed.Common.Extensions;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace TeleMed.Services
@@ -13,17 +14,30 @@ namespace TeleMed.Services
     public abstract class BaseService<T>
     {
         private readonly ILogger<T> _logger;
-        protected IServiceProvider serviceProvider;
+        protected IServiceProvider ServiceProvider;
+        protected readonly HttpClient HttpClient;
+
+        protected readonly string BaseUrl = $"api/{typeof(T).Name.Replace("Service", string.Empty)}";
+        
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="logger"></param>
-        protected BaseService(ILogger<T> logger, IServiceProvider serviceProvider = null!)
+        /// <param name="httpClient"></param>
+        /// <param name="serviceProvider"></param>
+        protected BaseService(ILogger<T> logger, HttpClient httpClient, IServiceProvider serviceProvider = null!)
         {
             _logger = logger;
-            this.serviceProvider = serviceProvider;
+            HttpClient = httpClient;
+            this.ServiceProvider = serviceProvider;
         }
+
+        public async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request, bool attachToken = true)
+        {
+            return await HttpClient.SendRequestAsync(request, attachToken);
+        }
+       
 
         /// <summary>
         /// Helps with logging information

@@ -1,5 +1,6 @@
     using TeleMed.Data;
     using TeleMed.DTOs;
+    using TeleMed.DTOs.Appointment;
     using TeleMed.Repos.Abstracts;
     using TeleMed.Responses;
     using TeleMed.States;

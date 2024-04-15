@@ -8,8 +8,18 @@ namespace TeleMed.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        
+        [StringLength(50)]
         public string Name { get; set; } = string.Empty;
+        
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
+        [StringLength(50)]
         public string Email { get; set; } = string.Empty;
+        
+        [StringLength(10)]
+        public string Role { get; set; } = string.Empty;
+        
+        [StringLength(50, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long")]
         public string Password { get; set; } = string.Empty;
     }
 }

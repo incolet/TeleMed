@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TeleMed.DTOs
+namespace TeleMed.DTOs.Auth
 {
-    public class RegisterDTO : LoginDTO
+    public class RegisterDto : LoginDTO
     {
         [Required]
         public string Name { get; set; } = string.Empty;

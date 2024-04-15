@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TeleMed.DTOs;
+using TeleMed.DTOs.Appointment;
 using TeleMed.Repos.Abstracts;
 using static TeleMed.Responses.CustomResponses;
 
