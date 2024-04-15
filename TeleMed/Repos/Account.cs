@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using TeleMed.Repos.Abstracts;
 
 namespace TeleMed.Repos
 {
@@ -26,7 +27,7 @@ namespace TeleMed.Repos
         {
 
             var findUser = GetUser(model.Email);
-            if (findUser == null) 
+            if (findUser is null) 
                 return new LoginResponse(false, "User doesn't exist");
 
             if (!BCrypt.Net.BCrypt.Verify(model.Password, findUser?.Password))
@@ -55,25 +56,36 @@ namespace TeleMed.Repos
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public RegistrationResponse RegisterAsync(RegisterDTO model)
+        public (RegistrationResponse,int) RegisterAsync(RegisterDTO model)
         {
             var findUser =  GetUser(model.Email);
-            if (findUser != null) return new RegistrationResponse(false, "User already exist");
+            if (findUser.Id > 1) 
+                return (new RegistrationResponse(false, "User already exist"),findUser.Id);
 
-            appDbContext.Users.Add(new ApplicationUser()
+            var newUser = new ApplicationUser()
             {
                 Name = model.Name,
                 Email = model.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(model.Password)
-            });
 
+            };
+            
+            appDbContext.Users.Add(newUser);
             appDbContext.SaveChangesAsync();
-            return new RegistrationResponse(true, "Success");
+            
+            var recordId = newUser.Id;
+            return (new RegistrationResponse(true, "Success"),recordId);
         }
 
-        private ApplicationUser GetUser(string email)
+        public ApplicationUser GetUser(string email)
         {
            var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Email == email).Result;
+
+           return user ?? null!;
+        }
+        public ApplicationUser GetUser(int id)
+        {
+           var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Id == id).Result;
 
            return user ?? null!;
         }

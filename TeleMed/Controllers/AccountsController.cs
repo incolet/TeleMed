@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TeleMed.DTOs;
 using TeleMed.Repos;
+using TeleMed.Repos.Abstracts;
 
 namespace TeleMed.Controllers
 {
@@ -30,7 +31,7 @@ namespace TeleMed.Controllers
         public IActionResult Register([FromBody] RegisterDTO model)
         {
             var user = accountRepo.RegisterAsync(model);
-            if (user == null)
+            if (user.Item1 == null)
             {
                 return BadRequest(new { message = "Username or email is already taken" });
             }

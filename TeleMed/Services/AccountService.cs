@@ -1,5 +1,6 @@
 ﻿using TeleMed.DTOs;
 using TeleMed.Responses;
+using TeleMed.Services.Abstracts;
 using static TeleMed.Responses.CustomResponses;
 
 namespace TeleMed.Services

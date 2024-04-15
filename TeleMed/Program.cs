@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TeleMed.Client.Pages;
+//using TeleMed.Client.Pages;
 using TeleMed.Components;
 using TeleMed.Data;
 using TeleMed.Repos;
+using TeleMed.Repos.Abstracts;
 using TeleMed.Services;
+using TeleMed.Services.Abstracts;
 using TeleMed.States;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,8 +82,7 @@ app.UseSwaggerUI(c =>
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
-    .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(TeleMed.Client._Imports).Assembly);
+    .AddInteractiveWebAssemblyRenderMode();
 
 app.MapControllers();
 app.UseAuthentication();
