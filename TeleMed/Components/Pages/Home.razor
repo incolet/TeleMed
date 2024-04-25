@@ -1,7 +1,147 @@
-﻿@page "/"
+﻿@page "/dashboard"
+@using System.Security.Claims
+@using TeleMed.DTOs.Appointment
+@using TeleMed.Models
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
+    <Authorized>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Welcome, @context.User.Identity!.Name</h2>
+                    <p>This is your dashboard.</p>
+                </div>
+            </div>
 
-Welcome to your new app.
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">Upcoming Appointments</div>
+                        <div class="card-body">
+                            @if (_appointments.Any())
+                            {
+                                <!-- Display a list of upcoming appointments here -->
+                                <ul class="list-group">
+                                    @foreach (var appointment in _appointments){
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>@appointment.ProviderName</span>
+                                                <span>@appointment.AppointmentDate.ToLongDateString() at @appointment.AppointmentTime</span>
+                                            </div>
+                                        </li> 
+                                    }
+                                    <!-- Add more appointments as needed -->
+                                </ul> 
+                            }
+                            else
+                            {
+                                <p>You have no upcoming appointments.</p>
+                            }
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Book an Appointment</div>
+                        <div class="card-body">
+                            <Button Color="ButtonColor.Primary" @onclick="OnShowModalClick">Book Now</Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Modal -->
+        <Modal @ref="_modal" Title="Modal title">
+            <BodyTemplate>
+                <div class="modal-body"> 
+                        <div class="form-group">
+                            <label for="doctorSelect">Select a Doctor</label>
+                            <select class="form-control" id="doctorSelect">
+                                @if(_providers.Any())
+                                {
+                                    @foreach (var provider in _providers)
+                                    {
+                                        <option value="@provider.Id">@provider.FirstName, @provider.LastName</option>
+                                    }
+                                }
+                                else
+                                {
+                                    <option value="">No providers available</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select a Date</label>
+                            <DateInput TValue="DateOnly" Value="_appointmentDate" ValueExpression="() => _appointmentDate" ValueChanged="(value) => DateChanged(value)" />
+                        </div>
+                        
+                        <div>
+                            <label>Select a Time</label>
+                            <select class="form-control" >
+                                @if(_providers.Any())
+                                {
+                                @foreach (var provider in _providers)
+                                {
+                                <option value="@provider.Id">@provider.FirstName, @provider.LastName</option>
+                                }
+                                }
+                                else
+                                {
+                                <option value="">No Time Slot available</option>
+                                }
+                            </select>
+                        </div>
+                        
+                </div>
+            </BodyTemplate>
+            <FooterTemplate>
+                <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+                <Button Color="ButtonColor.Primary">Save changes</Button>
+            </FooterTemplate>
+        </Modal>
+        
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to access this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    private ClaimsPrincipal? _user;
+    private Modal? _modal;
+    private List<AppointmentDto> _appointments = [];
+    private List<Providers> _providers = [];
+    
+    private DateOnly _appointmentDate;
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
+        var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
+        _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
+        _providers = await ProvidersService.GetProviders();
+    }
+
+
+    private async Task OnShowModalClick()
+    {
+        await _modal?.ShowAsync()!;
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await _modal?.HideAsync()!;
+    }
+    
+    private void DateChanged(DateOnly date)
+    {
+        _appointmentDate = date;
+    }
+}

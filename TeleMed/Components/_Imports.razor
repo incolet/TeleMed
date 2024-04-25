@@ -7,5 +7,20 @@
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
 @using TeleMed
-@using TeleMed.Client
 @using TeleMed.Components
+
+@using TeleMed.Services
+@using TeleMed.DTOs
+@using TeleMed.Responses
+@using TeleMed.States
+@using Microsoft.AspNetCore.Components.Authorization
+@using TeleMed.Services.Abstracts
+@using static TeleMed.Responses.CustomResponses
+
+@inject IAccountsService AccountsService
+@inject IAppointmentsService AppointmentsService
+@inject IProvidersService ProvidersService
+@inject IJSRuntime js
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider
+@using BlazorBootstrap
