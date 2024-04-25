@@ -6,6 +6,8 @@ using System.Text;
 //using TeleMed.Client.Pages;
 using TeleMed.Components;
 using TeleMed.Data;
+using TeleMed.Data.Abstracts;
+using TeleMed.Models;
 using TeleMed.Repos;
 using TeleMed.Repos.Abstracts;
 using TeleMed.Services;
@@ -48,12 +50,21 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+//Inject Repositories
+
+builder.Services.AddScoped<IAppDbContext, AppDbContext>();
+
+builder.Services.AddScoped<IProvider,Provider>();
 builder.Services.AddScoped<IAccount,Account>();
+builder.Services.AddScoped<IAppointment,Appointment>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["API_URL"]) });
 
+//Inject Services
+builder.Services.AddScoped<IProvidersService, ProvidersService>();
 builder.Services.AddScoped<IAccountsService, AccountsService>();
+builder.Services.AddScoped<IAppointmentsService, AppointmentsService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-
+builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
 

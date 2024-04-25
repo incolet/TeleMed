@@ -1,0 +1,14 @@
+@page "/logout"
+<h3>Logout</h3>
+<p>Logging out...</p>
+
+
+@code {
+    protected override Task OnInitializedAsync()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customAuthStateProvider.Logout();
+        NavManager.NavigateTo("/",forceLoad: true);
+        return Task.CompletedTask;
+    }
+}

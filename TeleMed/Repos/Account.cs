@@ -14,7 +14,7 @@ namespace TeleMed.Repos
 {
     public class Account(AppDbContext appDbContext, IConfiguration config) : IAccount
     {
-        public LoginResponse LoginAsync(LoginDTO model)
+        public LoginResponse LoginAsync(LoginDto model)
         {
 
             var findUser = GetUser(model.Email);
@@ -24,7 +24,7 @@ namespace TeleMed.Repos
             if (!BCrypt.Net.BCrypt.Verify(model.Password, findUser.Password))
                 return new LoginResponse(false, "Email/Password not valid");
             
-            string jwtToken = GenerateToken(findUser);
+            var jwtToken = GenerateToken(findUser);
 
             return new LoginResponse(true, "Login Success" , jwtToken);
         }
@@ -37,6 +37,8 @@ namespace TeleMed.Repos
             {
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
             var token = new JwtSecurityToken(
                 issuer: config["Jwt:Issuer"],
@@ -57,6 +59,7 @@ namespace TeleMed.Repos
             {
                 Name = model.Name,
                 Email = model.Email,
+                Role = model.Role,
                 Password = BCrypt.Net.BCrypt.HashPassword(model.Password)
 
             };
@@ -83,15 +86,16 @@ namespace TeleMed.Repos
 
         public LoginResponse RefreshToken(UserSession userSession)
         {
-            CustomUserClaims getUserClaims = DecryptJwtToken.DecryptToken(userSession.JwtToken);
-            if (string.IsNullOrEmpty(getUserClaims.Name) || string.IsNullOrEmpty(getUserClaims.Email))
+            var getUserClaims = DecryptJwtToken.DecryptToken(userSession.JwtToken);
+            if (string.IsNullOrEmpty(getUserClaims.Name) || string.IsNullOrEmpty(getUserClaims.Email) )
                 return new LoginResponse(false, "Invalid Token");
             
-            string newToken = GenerateToken(new ApplicationUser()
+            var newToken = GenerateToken(new ApplicationUser()
             {
                 Name = getUserClaims.Name,
                 Email = getUserClaims.Email,
-                Role = getUserClaims.Role
+                Role = getUserClaims.Role,
+                Id = int.TryParse(getUserClaims.UniqueId, out var id) ? id : 0
             });
             
             return new LoginResponse(true, "Token Refreshed", newToken);

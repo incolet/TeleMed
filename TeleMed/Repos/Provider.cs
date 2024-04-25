@@ -1,5 +1,4 @@
 using TeleMed.Data;
-using TeleMed.DTOs;
 using TeleMed.DTOs.Auth;
 using TeleMed.DTOs.Provider;
 using TeleMed.Models;
@@ -16,15 +15,6 @@ public class Provider (IAccount accountRepo, AppDbContext appDbContext)
     {
         try
         {
-            if (providerDto == null)
-            {
-                return new CustomResponses.ProviderResponse
-                {
-                    Flag = false,
-                    Message = "Provider data is required"
-                };
-            }
-            
             var findUser = accountRepo.GetUser(providerDto.Email);
             if (findUser.Id > 1)
                 return (new CustomResponses.ProviderResponse(false, "User already exist"));
@@ -34,7 +24,7 @@ public class Provider (IAccount accountRepo, AppDbContext appDbContext)
             {
                 Email = providerDto.Email,
                 Password = providerDto.LastName,
-                Role = (int)UserRoles.Provider
+                Role = nameof(UserRoles.Provider)
             });
             
             if (!registerResponse.Item1.Flag || registerResponse.Item2 == 0)

@@ -36,9 +36,10 @@ namespace TeleMed.Controllers
         }
 
         [HttpGet]
-        public List<Providers> GetProviders()
+        public IActionResult GetProviders()
         {
-            return providerRepo.GetProviders();
+            var providers = providerRepo.GetProviders();
+            return Ok(providers);
         }
     }
 }

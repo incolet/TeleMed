@@ -7,7 +7,6 @@ namespace TeleMed.Services.Abstracts;
 public interface IAccountsService
 {
     Task<RegistrationResponse> RegisterAsync(RegisterDto model);
-    Task<LoginResponse> LoginAsync(LoginDTO model);
-    Task<LoginResponse> RefreshToken(UserSession userSession);
+    Task<LoginResponse> LoginAsync(LoginDto model);
 }
 

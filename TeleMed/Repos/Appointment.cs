@@ -1,5 +1,5 @@
     using TeleMed.Data;
-    using TeleMed.DTOs;
+    using TeleMed.Data.Abstracts;
     using TeleMed.DTOs.Appointment;
     using TeleMed.Repos.Abstracts;
     using TeleMed.Responses;
@@ -7,7 +7,7 @@
 
     namespace TeleMed.Repos;
 
-    public class Appointment (AppDbContext appDbContext)
+    public class Appointment (IAppDbContext appDbContext)
         : IAppointment
     {
         
@@ -27,11 +27,13 @@
             return new CustomResponses.AppointmentResponse(false, "Appointment time must be in the future");
         }
 
-        // Check if the provider already has an appointment at the same time
-        var existingAppointment = appDbContext.Appointments
-            .FirstOrDefault(a => a.ProviderId == appointmentDto.ProviderId 
-                                 && a.AppointmentDate == appointmentDto.AppointmentDate
-                                 && a.AppointmentTime == appointmentDto.AppointmentTime);
+        var appointments = appDbContext.Appointments
+            .Where(a => a.ProviderId == appointmentDto.ProviderId 
+                        && a.AppointmentDate == appointmentDto.AppointmentDate)
+            .ToList();
+
+        var existingAppointment = appointments
+            .FirstOrDefault(a => a.AppointmentTime == appointmentDto.AppointmentTime);  
         if (existingAppointment != null)
         {
             return new CustomResponses.AppointmentResponse(false, "Provider already has an appointment at this time");
@@ -98,7 +100,7 @@
                     AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!
                 };
             
-            return query.FirstOrDefault() ?? new AppointmentDto();
+            return query.FirstOrDefault() ?? null!;
         }
 
         public List<AppointmentDto> GetAppointments()
@@ -123,6 +125,7 @@
 
         public List<AppointmentDto> GetAppointmentsByPatient(int patientId)
         {
+            var appointmentStatus = typeof(AppointmentStatus);
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
@@ -136,7 +139,7 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!
+                    AppointmentStatus = Enum.GetName(appointmentStatus, a.AppointmentStatus)!
                 };
             
             return query.ToList();
@@ -175,5 +178,40 @@
             appDbContext.SaveChanges();
             
             return new CustomResponses.AppointmentResponse(true, "Appointment cancelled successfully");
+        }
+
+        public CustomResponses.AppointmentResponse RescheduleAppointment(int appointmentId, DateTime newDate, string newTime)
+        {
+            var appointment = appDbContext.Appointments.Find(appointmentId);
+            if (appointment is null)
+                return new CustomResponses.AppointmentResponse(false, "Appointment not found");
+            
+            appointment.AppointmentDate = newDate;
+            appointment.AppointmentTime = newTime;
+            
+            appDbContext.Appointments.Update(appointment);
+            appDbContext.SaveChanges();
+            
+            return new CustomResponses.AppointmentResponse(true, "Appointment rescheduled successfully");
+        }
+
+        public List<DateTime> GetAvailableTimeSlots(int providerId, DateTime date)
+        {
+            var provider = appDbContext.Providers.Find(providerId);
+            if (provider is null)
+                return [];
+
+            var appointments = appDbContext.Appointments
+                .Where(a => a.ProviderId == providerId && a.AppointmentDate == date)
+                .Select(a => a.AppointmentTime)
+                .ToList();
+
+            var availableTimeSlots = Enumerable.Range(AppointmentConstants.StartTime, AppointmentConstants.EndTime - AppointmentConstants.StartTime)
+                .SelectMany(hour => Enumerable.Range(0, 60 / AppointmentConstants.AppointmentDuration)
+                    .Select(min => date.Date.AddHours(hour).AddMinutes(min * AppointmentConstants.AppointmentDuration)))
+                .Where(timeSlot => !appointments.Contains(timeSlot.ToString("HH:mm")))
+                .ToList();
+
+            return availableTimeSlots;
         }
     }

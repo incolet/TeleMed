@@ -18,4 +18,10 @@ public interface IAppointment
     
     AppointmentResponse CancelAppointment(int appointmentId);
     
+    AppointmentResponse RescheduleAppointment(int appointmentId, DateTime newDate, string newTime);
+    
+    List<DateTime> GetAvailableTimeSlots(int providerId, DateTime date);
+    
+    
+    
 }

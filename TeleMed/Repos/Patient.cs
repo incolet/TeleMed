@@ -1,4 +1,4 @@
-using TeleMed.Data;
+using TeleMed.Data.Abstracts;
 using TeleMed.DTOs;
 using TeleMed.DTOs.Auth;
 using TeleMed.Models;
@@ -9,7 +9,7 @@ using Exception = System.Exception;
 
 namespace TeleMed.Repos;
 
-public class Patient(IAccount accountRepo, AppDbContext appDbContext)
+public class Patient(IAccount accountRepo, IAppDbContext appDbContext)
     : IPatient
 {
     public CustomResponses.PatientResponse CreatePatient(PatientDto patientDto)
@@ -34,7 +34,7 @@ public class Patient(IAccount accountRepo, AppDbContext appDbContext)
             {
                 Email = patientDto.Email,
                 Password = patientDto.LastName,
-                Role = (int)UserRoles.Patient
+                Role = nameof(UserRoles.Patient)
             });
 
             if (!registerResponse.Item1.Flag || registerResponse.Item2 == 0)

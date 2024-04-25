@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleMed", "TeleMed\TeleMed.csproj", "{69AB3EFA-1F15-4110-B0BF-4EB6D6F130EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeleMedicineTest", "TeleMedicineTest\TeleMedicineTest.csproj", "{D357B9B1-AA9B-42C2-9F5F-618771498104}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{69AB3EFA-1F15-4110-B0BF-4EB6D6F130EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69AB3EFA-1F15-4110-B0BF-4EB6D6F130EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69AB3EFA-1F15-4110-B0BF-4EB6D6F130EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D357B9B1-AA9B-42C2-9F5F-618771498104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D357B9B1-AA9B-42C2-9F5F-618771498104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D357B9B1-AA9B-42C2-9F5F-618771498104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D357B9B1-AA9B-42C2-9F5F-618771498104}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

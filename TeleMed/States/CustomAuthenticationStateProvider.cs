@@ -49,9 +49,16 @@ namespace TeleMed.States
             return new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Email, claims.Email),
-                new Claim(ClaimTypes.Name, claims.Name)
+                new Claim(ClaimTypes.Name, claims.Name),
+                new Claim(ClaimTypes.Role, claims.Role),
+                new Claim(ClaimTypes.NameIdentifier, claims.UniqueId)
             }, "JwtAuth"));
         }
 
+        public void Logout()
+        {
+            Constants.JwtToken = string.Empty;
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
+        }
     }
 }

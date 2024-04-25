@@ -10,7 +10,7 @@ namespace TeleMed.Controllers
     public class AccountsController(IAccount accountRepo) : ControllerBase
     {
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDTO model)
+        public IActionResult Login([FromBody] LoginDto model)
         {
             var user = accountRepo.LoginAsync(model);
             if (!user.Flag)
