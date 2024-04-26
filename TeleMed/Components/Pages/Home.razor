@@ -20,21 +20,21 @@
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-header">Upcoming Appointments</div>
-                        <Grid @ref="grid"
+                        <Grid @ref="_grid"
                               TItem="AppointmentDto"
                               Class="table table-hover table-bordered table-striped"
                               DataProvider="AppointmentDataProvider"
                               AllowFiltering="true"
                               Responsive="true">
 
-                            <GridColumn TItem="AppointmentDto" HeaderText="Provider Name" PropertyName="ProviderName">
-                                @context.ProviderName
+                            <GridColumn TItem="AppointmentDto" HeaderText="Provider Name" PropertyName="ProviderName" Context="appointmentContext">
+                                @appointmentContext.ProviderName
                             </GridColumn>
-                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Date" PropertyName="AppointmentDate">
-                                @context.AppointmentDate.ToLongDateString()
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Date" PropertyName="AppointmentDate" Context="appointmentContext">
+                                @appointmentContext.AppointmentDate.ToLongDateString()
                             </GridColumn>
-                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime">
-                                @context.AppointmentTime
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime" Context="appointmentContext">
+                                @appointmentContext.AppointmentTime
                             </GridColumn>
                             
 
@@ -139,7 +139,7 @@
 </AuthorizeView>
 
 @code {
-    BlazorBootstrap.Grid<AppointmentDto> grid = default!;
+    Grid<AppointmentDto> _grid = default!;
 
     private ClaimsPrincipal? _user;
     private Modal? _modal;
@@ -209,7 +209,7 @@
 
     private async Task<GridDataProviderResult<AppointmentDto>> AppointmentDataProvider(GridDataProviderRequest<AppointmentDto> request)
     {
-        if (_appointments is null) // pull employees only one time for client-side filtering, sorting, and paging
+        if (_appointments.Count > 0) return await Task.FromResult(request.ApplyTo(_appointments));
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
         _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
         var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier);
