@@ -12,9 +12,10 @@ namespace TeleMed.Controllers
     public class AppointmentsController(IAppointment appointmentRepo) : ControllerBase
     {
         [HttpPost]
-        public AppointmentResponse CreateAppointment([FromBody] AppointmentDto appointmentDto)
+        public IActionResult CreateAppointment([FromBody] AppointmentDto appointmentDto)
         {
-            return appointmentRepo.CreateAppointment(appointmentDto);
+            var result = appointmentRepo.CreateAppointment(appointmentDto);
+            return Ok(result);
         }
 
         [HttpPut]
@@ -62,10 +63,11 @@ namespace TeleMed.Controllers
             return appointmentRepo.CancelAppointment(appointmentId);
         }
         
-        [HttpGet("time-slots/{providerId:int}/{date:datetime}")]
-        public IActionResult GetTimeSlots(int providerId,DateTime date)
+        [HttpGet("time-slots/{providerId}/{date}")]
+        public IActionResult GetTimeSlots([FromRoute] int providerId,string date)
         {
-            var result = appointmentRepo.GetAvailableTimeSlots(providerId,date);
+            var newDate = Convert.ToDateTime(date);
+            var result = appointmentRepo.GetAvailableTimeSlots(providerId,newDate);
             return Ok(result);
         }
     }

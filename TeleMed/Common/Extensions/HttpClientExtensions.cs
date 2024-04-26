@@ -22,7 +22,7 @@ public static class HttpClientExtensions
             var serializedBody = Newtonsoft.Json.JsonConvert.SerializeObject(body); 
             request.Content = new StringContent(serializedBody, System.Text.Encoding.UTF8, "application/json");
 
-            return await httpClient.SendAsync(request);
+            return httpClient.Send(request);
         }
         catch (Exception e)
         {

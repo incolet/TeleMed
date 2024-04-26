@@ -9,5 +9,5 @@ public interface IAppointmentsService
     Task<List<AppointmentDto>> GetAppointmentsByPatientId(int patientId);
     Task<CustomResponses.AppointmentResponse> CreateAppointment(AppointmentDto appointmentDto);
     
-    Task<List<DateTime>> GetAvailableAppointmentTimes(int providerId, DateTime appointmentDate);
+    Task<List<DateTime>> GetAvailableAppointmentTimes(int providerId, string appointmentDate);
 }
