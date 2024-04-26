@@ -17,7 +17,7 @@ public class Patients
     public string FirstName { get; set; } = string.Empty;
     
     [StringLength(50)]
-    public string MiddleName { get; set; } = string.Empty;
+    public string? MiddleName { get; set; } = string.Empty;
     
     [Required]
     [StringLength(50)]
@@ -28,7 +28,7 @@ public class Patients
     public string Address1 { get; set; } = string.Empty;
     
     [StringLength(50)]
-    public string Address2 { get; set; } = string.Empty;
+    public string? Address2 { get; set; } = string.Empty;
     
     [Required]
     [StringLength(50)]

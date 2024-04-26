@@ -1,6 +1,5 @@
 using TeleMed.Common.Extensions;
 using TeleMed.DTOs.Appointment;
-using TeleMed.DTOs.Provider;
 using TeleMed.Responses;
 using TeleMed.Services.Abstracts;
 
@@ -29,7 +28,7 @@ class AppointmentsService(
         return result!;
     }
     
-    public async Task<List<DateTime>> GetAvailableAppointmentTimes(int providerId, DateTime appointmentDate)
+    public async Task<List<DateTime>> GetAvailableAppointmentTimes(int providerId, string appointmentDate)
     {
         var response =  HttpClient
             .ExtSendRequestAsyncNoBody(new HttpRequestMessage(HttpMethod.Get,$"{_baseUrl}/time-slots/{providerId}/{appointmentDate}")).Result;

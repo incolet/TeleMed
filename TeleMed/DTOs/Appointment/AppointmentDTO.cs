@@ -22,6 +22,5 @@ public class AppointmentDto
     [Required]
     public string AppointmentTime { get; set; } = string.Empty;
     
-    [Required] 
     public string AppointmentStatus { get; set; } = string.Empty;
 }

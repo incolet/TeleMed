@@ -1,4 +1,4 @@
-    using TeleMed.Data;
+    using TeleMed.Common.Extensions;
     using TeleMed.Data.Abstracts;
     using TeleMed.DTOs.Appointment;
     using TeleMed.Repos.Abstracts;
@@ -14,42 +14,42 @@
         public CustomResponses.AppointmentResponse CreateAppointment(AppointmentDto appointmentDto)
         {
 
-        // Check if the provider exists
-        var provider = appDbContext.Providers.Find(appointmentDto.ProviderId);
-        if (provider == null)
-        {
-            return new CustomResponses.AppointmentResponse(false, "Provider not found");
-        }
+            // Check if the provider exists
+            var provider = appDbContext.Providers.Find(appointmentDto.ProviderId);
+            if (provider == null)
+            {
+                return new CustomResponses.AppointmentResponse(false, "Provider not found");
+            }
 
-        // Check if the appointment time is in the future
-        if (appointmentDto.AppointmentDate < DateTime.Now)
-        {
-            return new CustomResponses.AppointmentResponse(false, "Appointment time must be in the future");
-        }
+            // Check if the appointment time is in the future
+            if (appointmentDto.AppointmentDate < DateTime.Now)
+            {
+                return new CustomResponses.AppointmentResponse(false, "Appointment time must be in the future");
+            }
 
-        var appointments = appDbContext.Appointments
-            .Where(a => a.ProviderId == appointmentDto.ProviderId 
-                        && a.AppointmentDate == appointmentDto.AppointmentDate)
-            .ToList();
+            var appointments = appDbContext.Appointments
+                .Where(a => a.ProviderId == appointmentDto.ProviderId 
+                            && a.AppointmentDate == appointmentDto.AppointmentDate.ToUniversalTime())
+                .ToList();
 
-        var existingAppointment = appointments
-            .FirstOrDefault(a => a.AppointmentTime == appointmentDto.AppointmentTime);  
-        if (existingAppointment != null)
-        {
-            return new CustomResponses.AppointmentResponse(false, "Provider already has an appointment at this time");
-        }
+            var existingAppointment = appointments
+                .FirstOrDefault(a => a.AppointmentTime == appointmentDto.AppointmentTime);  
+            if (existingAppointment != null)
+            {
+                return new CustomResponses.AppointmentResponse(false, "Provider already has an appointment at this time");
+            }
 
-        var appointment = new Models.Appointments
-        {
-            PatientId = appointmentDto.PatientId,
-            ProviderId = appointmentDto.ProviderId,
-            AppointmentDate = appointmentDto.AppointmentDate,
-            AppointmentTime = appointmentDto.AppointmentTime,
-            AppointmentStatus = (int)AppointmentStatus.Scheduled
-        };
+            var appointment = new Models.Appointments
+            {
+                PatientId = GetPatientId(appointmentDto.PatientId),
+                ProviderId = appointmentDto.ProviderId,
+                AppointmentDate = appointmentDto.AppointmentDate.ToUniversalTime(),
+                AppointmentTime = appointmentDto.AppointmentTime,
+                AppointmentStatus = (int)AppointmentStatus.Scheduled
+            };
 
-        appDbContext.Appointments.Add(appointment);
-        appDbContext.SaveChanges();
+            appDbContext.Appointments.Add(appointment);
+            appDbContext.SaveChanges();
 
         return new CustomResponses.AppointmentResponse(true, "Appointment created successfully");
     }
@@ -123,8 +123,10 @@
             return query.ToList();
         }
 
-        public List<AppointmentDto> GetAppointmentsByPatient(int patientId)
+        public List<AppointmentDto> GetAppointmentsByPatient(int userId)
         {
+            var patientId = GetPatientId(userId);
+            
             var appointmentStatus = typeof(AppointmentStatus);
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
@@ -202,16 +204,21 @@
                 return [];
 
             var appointments = appDbContext.Appointments
-                .Where(a => a.ProviderId == providerId && a.AppointmentDate == date)
+                .Where(a => a.ProviderId == providerId && a.AppointmentDate == date.ToUniversalTime().Date)
                 .Select(a => a.AppointmentTime)
                 .ToList();
 
             var availableTimeSlots = Enumerable.Range(AppointmentConstants.StartTime, AppointmentConstants.EndTime - AppointmentConstants.StartTime)
                 .SelectMany(hour => Enumerable.Range(0, 60 / AppointmentConstants.AppointmentDuration)
                     .Select(min => date.Date.AddHours(hour).AddMinutes(min * AppointmentConstants.AppointmentDuration)))
-                .Where(timeSlot => !appointments.Contains(timeSlot.ToString("HH:mm")))
+                .Where(timeSlot => !appointments.Contains(timeSlot.ToTimeString()))
                 .ToList();
 
             return availableTimeSlots;
+        }
+        
+        private int GetPatientId(int userId)
+        {
+            return appDbContext.Patients.FirstOrDefault(p => p.UserId == userId)?.Id ?? 0;
         }
     }

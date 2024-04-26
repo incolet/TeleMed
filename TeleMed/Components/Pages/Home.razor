@@ -1,5 +1,6 @@
 ﻿@page "/dashboard"
 @using System.Security.Claims
+@using TeleMed.Common.Extensions
 @using TeleMed.DTOs.Appointment
 @using TeleMed.Models
 
@@ -55,52 +56,59 @@
         </div>
 
         <!-- Appointment Modal -->
-        <Modal @ref="_modal" Title="Modal title">
+        <Modal @ref="_modal" Title="Book Appointment">
             <BodyTemplate>
                 <div class="modal-body"> 
                         <div class="form-group">
-                            <label for="doctorSelect">Select a Doctor</label>
-                            <select class="form-control" id="doctorSelect">
-                                @if(_providers.Any())
-                                {
+                            <label>Select a Doctor</label>
+                            @if (_providers.Any())
+                            {
+                                <InputSelect @bind-Value="_providerId" class="form-control">
                                     @foreach (var provider in _providers)
                                     {
                                         <option value="@provider.Id">@provider.FirstName, @provider.LastName</option>
                                     }
-                                }
-                                else
-                                {
-                                    <option value="">No providers available</option>
-                                }
-                            </select>
+                                </InputSelect>
+                            }
+                            else
+                            {
+                                <InputSelect @bind-Value="_providerId" >
+                                    <option value="">No Providers available</option>
+                                </InputSelect>
+                            }
+                            
                         </div>
                         <div class="form-group">
                             <label>Select a Date</label>
-                            <DateInput TValue="DateOnly" Value="_appointmentDate" ValueExpression="() => _appointmentDate" ValueChanged="(value) => DateChanged(value)" />
+                            <DateInput TValue="DateOnly" @bind-Value="@_appointmentDate" @onblur="DateChanged" Placeholder="Enter Date" />
                         </div>
                         
                         <div>
                             <label>Select a Time</label>
-                            <select class="form-control" >
-                                @if(_providers.Any())
+                            <InputSelect @bind-Value="_appointmentTime" class="form-control">
+                                @if (_timeSlots.Any())
                                 {
-                                @foreach (var provider in _providers)
-                                {
-                                <option value="@provider.Id">@provider.FirstName, @provider.LastName</option>
-                                }
+
+                                    @foreach (var timeSlot in _timeSlots)
+                                    {
+                                        <option value="@timeSlot.ToTimeString()">@timeSlot.ToTimeString()</option>
+                                    }
+
                                 }
                                 else
                                 {
-                                <option value="">No Time Slot available</option>
+
+                                    <option value="">No Time Slot available</option>
+
                                 }
-                            </select>
+                            </InputSelect >
                         </div>
                         
                 </div>
             </BodyTemplate>
             <FooterTemplate>
                 <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
-                <Button Color="ButtonColor.Primary">Save changes</Button>
+                <Button Color="ButtonColor.Primary" @onclick="BookAppointment">Book</Button>
             </FooterTemplate>
         </Modal>
         
@@ -117,19 +125,13 @@
     private List<AppointmentDto> _appointments = [];
     private List<Providers> _providers = [];
     
-    private DateOnly _appointmentDate;
+    private DateOnly _appointmentDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
+    private string _appointmentTime = "";
+    private List<DateTime> _timeSlots = [];
+    
+    private int _providerId;
     
     
-    protected override async Task OnInitializedAsync()
-    {
-        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
-        var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
-        _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
-        _providers = await ProvidersService.GetProviders();
-    }
-
-
     private async Task OnShowModalClick()
     {
         await _modal?.ShowAsync()!;
@@ -140,8 +142,42 @@
         await _modal?.HideAsync()!;
     }
     
-    private void DateChanged(DateOnly date)
+    protected override async Task OnInitializedAsync()
     {
-        _appointmentDate = date;
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
+        var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
+        _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
+        _providers = await ProvidersService.GetProviders();
     }
+    
+    private void DateChanged()
+    {
+        _timeSlots = AppointmentsService.GetAvailableAppointmentTimes(_providerId,_appointmentDate.ToString("yyyy-MM-dd")).Result;
+    }
+    
+    private async Task BookAppointment()
+    {
+        var data = new AppointmentDto
+        {
+            PatientId = int.Parse(_user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0"),
+            ProviderId = _providerId,
+            AppointmentDate = new DateTime(_appointmentDate.Year, _appointmentDate.Month, _appointmentDate.Day),
+            AppointmentTime = _appointmentTime
+        };
+
+        var result = AppointmentsService.CreateAppointment(data).Result;
+        
+        if (result.Flag)
+        {
+            await _modal?.HideAsync()!;
+            _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(_user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0"));
+        }
+        else
+        {
+            // Show error message
+            await js.InvokeVoidAsync("alert", result.Message);
+        }
+    }
+
 }
