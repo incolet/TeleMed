@@ -20,10 +20,30 @@
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-header">Upcoming Appointments</div>
-                        <div class="card-body">
+                        <Grid @ref="grid"
+                              TItem="AppointmentDto"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="AppointmentDataProvider"
+                              AllowFiltering="true"
+                              Responsive="true">
+
+                            <GridColumn TItem="AppointmentDto" HeaderText="Provider Name" PropertyName="ProviderName">
+                                @context.ProviderName
+                            </GridColumn>
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Date" PropertyName="AppointmentDate">
+                                @context.AppointmentDate.ToLongDateString()
+                            </GridColumn>
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime">
+                                @context.AppointmentTime
+                            </GridColumn>
+                            
+
+                        </Grid>
+                        @* <div class="card-body">
                             @if (_appointments.Any())
                             {
                                 <!-- Display a list of upcoming appointments here -->
+
                                 <ul class="list-group">
                                     @foreach (var appointment in _appointments){
                                         <li class="list-group-item">
@@ -41,7 +61,7 @@
                                 <p>You have no upcoming appointments.</p>
                             }
                             
-                        </div>
+                        </div> *@
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -119,6 +139,7 @@
 </AuthorizeView>
 
 @code {
+    BlazorBootstrap.Grid<AppointmentDto> grid = default!;
 
     private ClaimsPrincipal? _user;
     private Modal? _modal;
@@ -141,15 +162,21 @@
     {
         await _modal?.HideAsync()!;
     }
-    
-    protected override async Task OnInitializedAsync()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
-        var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
-        _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
-        _providers = await ProvidersService.GetProviders();
+        await base.OnAfterRenderAsync(firstRender);
     }
+
+    
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+    //     _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
+    //     var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
+    //     _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
+    //     _providers = await ProvidersService.GetProviders();
+    // }
     
     private void DateChanged()
     {
@@ -178,6 +205,18 @@
             // Show error message
             await js.InvokeVoidAsync("alert", result.Message);
         }
+    }
+
+    private async Task<GridDataProviderResult<AppointmentDto>> AppointmentDataProvider(GridDataProviderRequest<AppointmentDto> request)
+    {
+        if (_appointments is null) // pull employees only one time for client-side filtering, sorting, and paging
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
+        var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier);
+        _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
+        _providers = await ProvidersService.GetProviders();
+
+        return await Task.FromResult(request.ApplyTo(_appointments));
     }
 
 }
