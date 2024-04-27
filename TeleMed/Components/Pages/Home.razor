@@ -24,7 +24,7 @@
                               TItem="AppointmentDto"
                               Class="table table-hover table-bordered table-striped"
                               DataProvider="AppointmentDataProvider"
-                              AllowFiltering="true"
+                              AllowFiltering="false"
                               Responsive="true">
 
                             <GridColumn TItem="AppointmentDto" HeaderText="Provider Name" PropertyName="ProviderName" Context="appointmentContext">
@@ -35,6 +35,8 @@
                             </GridColumn>
                             <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime" Context="appointmentContext">
                                 @appointmentContext.AppointmentTime
+                            </GridColumn><GridColumn TItem="AppointmentDto" HeaderText="Meeting Link" PropertyName="AppointmentTime" Context="appointmentContext">
+                                <Button Color="ButtonColor.Primary">Start Meeting</Button>
                             </GridColumn>
                             
 
