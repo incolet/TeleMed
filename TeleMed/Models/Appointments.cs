@@ -27,4 +27,7 @@ public class Appointments
     public int AppointmentStatus { get; set; }
 
     public bool Status { get; set; }
+
+    [StringLength(50)]
+    public string? MeetingLink { get; set; }
 }
