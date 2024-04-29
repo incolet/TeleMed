@@ -23,4 +23,6 @@ public class AppointmentDto
     public string AppointmentTime { get; set; } = string.Empty;
     
     public string AppointmentStatus { get; set; } = string.Empty;
+
+    public string? MeetingLink { get; set; }
 }

@@ -1,4 +1,5 @@
 using TeleMed.Data;
+using TeleMed.Data.Abstracts;
 using TeleMed.DTOs.Auth;
 using TeleMed.DTOs.Provider;
 using TeleMed.Models;
@@ -8,7 +9,7 @@ using TeleMed.States;
 
 namespace TeleMed.Repos;
 
-public class Provider (IAccount accountRepo, AppDbContext appDbContext)
+public class Provider (IAccount accountRepo, IAppDbContext appDbContext)
     : IProvider
 {
     public CustomResponses.ProviderResponse CreateProvider(ProviderDto providerDto)

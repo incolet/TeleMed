@@ -55,7 +55,7 @@ public class AppointmentsTest
     public void CreateAppointment_ReturnsFailure_WhenProviderAlreadyHasAnAppointmentAtTheSameTime()
     {
         // Arrange
-        var appointmentDto = new AppointmentDto { ProviderId = 1, AppointmentDate = DateTime.Now.AddDays(1), AppointmentTime = "10:00" };
+        var appointmentDto = new AppointmentDto { ProviderId = 1, AppointmentDate = DateTime.Now.AddDays(1).ToUniversalTime().Date, AppointmentTime = "10:00 AM" };
         
         var provider = new Providers { Id = appointmentDto.ProviderId };
         _appDbContext.Setup(db => db.Providers.Find(appointmentDto.ProviderId)).Returns(provider);
@@ -89,13 +89,27 @@ public class AppointmentsTest
     public void CreateAppointment_ReturnsSuccess_WhenAppointmentIsCreatedSuccessfully()
     {
         // Arrange
-        var appointmentDto = new AppointmentDto { ProviderId = 1, AppointmentDate = DateTime.Now.AddDays(1), AppointmentTime = "10:00" };
+        var appointmentDto = new AppointmentDto { PatientId = 1,ProviderId = 1, AppointmentDate = DateTime.Now.AddDays(1).ToUniversalTime().Date, AppointmentTime = "10:00 AM" };
+        
         var provider = new Providers { Id = appointmentDto.ProviderId };
         _appDbContext.Setup(db => db.Providers.Find(appointmentDto.ProviderId)).Returns(provider);
+        
+        var patients = new List<Patients>
+        {
+            new Patients { UserId = 1,Id = 1, FirstName = "Jane", LastName = "Doe" }
+        };
+        
+        var mockDbSetPatients = new Mock<DbSet<Patients>>();
+        mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.Provider).Returns(patients.AsQueryable().Provider);
+        mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.Expression).Returns(patients.AsQueryable().Expression);
+        mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.ElementType).Returns(patients.AsQueryable().ElementType);
+        using var value = patients.AsQueryable().GetEnumerator();
+        mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.GetEnumerator()).Returns(value);
+        _appDbContext.Setup(db => db.Patients).Returns(mockDbSetPatients.Object);
 
         var appointments = new List<Appointments>
         {
-            new Appointments { ProviderId = 2, AppointmentDate = DateTime.Now.AddDays(1), AppointmentTime = "10:00" },
+            new Appointments { ProviderId = 2, AppointmentDate = DateTime.Now.AddDays(1), AppointmentTime = "10:00 AM",Status = true},
             
         };
 
@@ -170,7 +184,7 @@ public class AppointmentsTest
     {
         // Arrange
         const int providerId = 1;
-        var date = DateTime.Now;
+        var date = DateTime.Now.ToUniversalTime().Date;
         
         // Mocking the Provider to return a valid provider
         var provider = new Providers { Id = providerId };
@@ -179,8 +193,8 @@ public class AppointmentsTest
         // Mocking the Appointments to return a list with some appointments
         var appointments = new List<Appointments>
         {
-            new Appointments { ProviderId = providerId, AppointmentDate = date, AppointmentTime = "10:00" },
-            new Appointments { ProviderId = providerId, AppointmentDate = date, AppointmentTime = "11:00" }
+            new Appointments { ProviderId = providerId, AppointmentDate = date, AppointmentTime = "10:00 AM",Status = true},
+            new Appointments { ProviderId = providerId, AppointmentDate = date, AppointmentTime = "11:00 AM",Status = true}
         };
         var dbSetMock = new Mock<DbSet<Appointments>>();
         dbSetMock.As<IQueryable<Appointments>>().Setup(m => m.Provider).Returns(appointments.AsQueryable().Provider);
@@ -295,7 +309,7 @@ public class AppointmentsTest
         // Mocking the Patients DbSet
         var patients = new List<Patients>
         {
-            new Patients { Id = 1, FirstName = "Jane", LastName = "Doe" }
+            new Patients { UserId = 1,Id = 1, FirstName = "Jane", LastName = "Doe" }
         };
 
         var queryablePatients = patients.AsQueryable();
@@ -312,8 +326,8 @@ public class AppointmentsTest
         // Mocking the Appointments to return a list with some appointments
         var appointments = new List<Appointments>
         {
-            new Appointments { ProviderId = providerId, PatientId = 1, AppointmentDate = DateTime.Now, AppointmentTime = "10:00" },
-            new Appointments { ProviderId = providerId, PatientId = 1, AppointmentDate = DateTime.Now, AppointmentTime = "11:00" }
+            new Appointments { ProviderId = providerId, PatientId = 1, AppointmentDate = DateTime.Now, AppointmentTime = "10:00", Status = true},
+            new Appointments { ProviderId = providerId, PatientId = 1, AppointmentDate = DateTime.Now, AppointmentTime = "11:00", Status = true}
         };
         var dbSetMock = new Mock<DbSet<Appointments>>();
         dbSetMock.As<IQueryable<Appointments>>().Setup(m => m.Provider).Returns(appointments.AsQueryable().Provider);
@@ -403,7 +417,7 @@ public class AppointmentsTest
         // Mocking the Patients DbSet
         var patients = new List<Patients>
         {
-            new Patients { Id = patientId, FirstName = "Jane", LastName = "Doe" }
+            new Patients { UserId = 1,Id = patientId, FirstName = "Jane", LastName = "Doe" }
         };
         var mockDbSetPatients = new Mock<DbSet<Patients>>();
         mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.Provider).Returns(patients.AsQueryable().Provider);
@@ -416,8 +430,8 @@ public class AppointmentsTest
         // Mocking the Appointments DbSet
         var appointments = new List<Appointments>
         {
-            new Appointments { PatientId = patientId, ProviderId = providerId, AppointmentDate = DateTime.Now, AppointmentTime = "10:00" },
-            new Appointments { PatientId = patientId, ProviderId = providerId, AppointmentDate = DateTime.Now, AppointmentTime = "11:00" }
+            new Appointments { PatientId = patientId, ProviderId = providerId, AppointmentDate = DateTime.Now, AppointmentTime = "10:00",Status = true},
+            new Appointments { PatientId = patientId, ProviderId = providerId, AppointmentDate = DateTime.Now, AppointmentTime = "11:00", Status = true}
         };
         var mockDbSetAppointments = new Mock<DbSet<Appointments>>();
         mockDbSetAppointments.As<IQueryable<Appointments>>().Setup(m => m.Provider).Returns(appointments.AsQueryable().Provider);
@@ -492,7 +506,7 @@ public class AppointmentsTest
         const int appointmentId = 1;
         const int providerId = 1;
         const int patientId = 1;
-        var appointment = new Appointments { Id = appointmentId, ProviderId = providerId,PatientId = patientId,AppointmentDate = DateTime.Now, AppointmentTime = "10:00"};
+        var appointment = new Appointments { Id = appointmentId, ProviderId = providerId,PatientId = patientId,AppointmentDate = DateTime.Now, AppointmentTime = "10:00",Status = true};
 
         var appointments = new List<Appointments>
         {
@@ -624,8 +638,8 @@ public class AppointmentsTest
         // Mocking the Appointments to return a list with some appointments
         var appointments = new List<Appointments>
         {
-            new Appointments { AppointmentDate = DateTime.Now, AppointmentTime = "10:00", ProviderId = providerId, PatientId = patientId },
-            new Appointments { AppointmentDate = DateTime.Now, AppointmentTime = "11:00", ProviderId = providerId, PatientId = patientId }
+            new Appointments { AppointmentDate = DateTime.Now, AppointmentTime = "10:00", ProviderId = providerId, PatientId = patientId,Status = true},
+            new Appointments { AppointmentDate = DateTime.Now, AppointmentTime = "11:00", ProviderId = providerId, PatientId = patientId,Status = true}
         };
         var dbSetMock = new Mock<DbSet<Appointments>>();
         dbSetMock.As<IQueryable<Appointments>>().Setup(m => m.Provider).Returns(appointments.AsQueryable().Provider);
