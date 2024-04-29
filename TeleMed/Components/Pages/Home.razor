@@ -1,5 +1,6 @@
 ﻿@page "/dashboard"
 @using System.Security.Claims
+@using TeleMed.Common
 @using TeleMed.Common.Extensions
 @using TeleMed.DTOs.Appointment
 @using TeleMed.Models
@@ -20,7 +21,7 @@
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-header">Upcoming Appointments</div>
-                        <Grid @ref="_grid"
+                        <Grid @ref="@_grid"
                               TItem="AppointmentDto"
                               Class="table table-hover table-bordered table-striped"
                               DataProvider="AppointmentDataProvider"
@@ -35,35 +36,23 @@
                             </GridColumn>
                             <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime" Context="appointmentContext">
                                 @appointmentContext.AppointmentTime
-                            </GridColumn><GridColumn TItem="AppointmentDto" HeaderText="Meeting Link" PropertyName="AppointmentTime" Context="appointmentContext">
-                                <Button Color="ButtonColor.Primary">Start Meeting</Button>
                             </GridColumn>
                             
-
-                        </Grid>
-                        @* <div class="card-body">
-                            @if (_appointments.Any())
-                            {
-                                <!-- Display a list of upcoming appointments here -->
-
-                                <ul class="list-group">
-                                    @foreach (var appointment in _appointments){
-                                        <li class="list-group-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>@appointment.ProviderName</span>
-                                                <span>@appointment.AppointmentDate.ToLongDateString() at @appointment.AppointmentTime</span>
-                                            </div>
-                                        </li> 
-                                    }
-                                    <!-- Add more appointments as needed -->
-                                </ul> 
-                            }
-                            else
-                            {
-                                <p>You have no upcoming appointments.</p>
-                            }
                             
-                        </div> *@
+                            <GridColumn TItem="AppointmentDto" HeaderText="Meeting Link" PropertyName="AppointmentTime" Context="appointmentContext">
+                                @* <Button Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Target="Target.Blank">Start Meeting</Button> *@
+                                @if (CombineDateAndTime.Combine(@appointmentContext.AppointmentDate, @appointmentContext.AppointmentTime) < DateTime.Now.AddMinutes(10))
+                                {
+                                    <Button Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Size="Size.Small" Target="Target.Blank">Start Meeting</Button>
+                                }
+                                else
+                                { 
+                                    <Button Color="ButtonColor.Secondary" Size="Size.Small" TooltipTitle="Link Available 5 Minutes To Appointment" TooltipPlacement="TooltipPlacement.Right" Disabled="true">Start Meeting</Button>
+                                    
+                                
+                                }
+                            </GridColumn>
+                        </Grid>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -141,6 +130,9 @@
 </AuthorizeView>
 
 @code {
+    
+    [Inject] protected ToastService? ToastService { get; set; }
+    
     Grid<AppointmentDto> _grid = default!;
 
     private ClaimsPrincipal? _user;
@@ -169,16 +161,6 @@
     {
         await base.OnAfterRenderAsync(firstRender);
     }
-
-    
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-    //     _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
-    //     var patientId = _user.FindFirstValue(ClaimTypes.NameIdentifier); 
-    //     _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(patientId ?? "0"));
-    //     _providers = await ProvidersService.GetProviders();
-    // }
     
     private void DateChanged()
     {
@@ -200,12 +182,13 @@
         if (result.Flag)
         {
             await _modal?.HideAsync()!;
+            
+            ToastService?.Notify(new ToastMessage(ToastType.Success, result.Message));
             _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(_user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0"));
         }
         else
         {
-            // Show error message
-            await js.InvokeVoidAsync("alert", result.Message);
+            ToastService?.Notify(new ToastMessage(ToastType.Danger, $"Error: {result.Message}."));
         }
     }
 

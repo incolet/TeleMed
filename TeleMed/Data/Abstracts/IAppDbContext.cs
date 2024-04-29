@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TeleMed.Models;
 
 namespace TeleMed.Data.Abstracts;
@@ -12,6 +13,9 @@ public interface IAppDbContext
     
     public int SaveChanges();
     
+    ChangeTracker ChangeTracker { get; }
+    
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
+    EntityEntry Entry(object entity);
 }

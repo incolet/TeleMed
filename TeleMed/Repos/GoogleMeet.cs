@@ -9,7 +9,7 @@ namespace TeleMed.Repos;
 
 public class GoogleMeet : IGoogleMeet
 {
-    private const string CredentialsFilePath = "../../../credentials.json";
+    private const string CredentialsFilePath = "./credentials.json";
     
     public async Task<string> GetGoogleMeetLink(GoogleMeetRequestDto model)
     {
@@ -65,7 +65,8 @@ public class GoogleMeet : IGoogleMeet
         // Delete the event
         service.Events.Delete("primary", eventId).Execute();
     }
-   private static async Task<CalendarService> GetCalendarService(string credentialsFilePath)
+    
+    private static async Task<CalendarService> GetCalendarService(string credentialsFilePath)
     {
         // Create Google credential object from JSON file
         // credentials.json points to the file containing the client ID and client secret.

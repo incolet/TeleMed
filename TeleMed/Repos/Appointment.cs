@@ -1,6 +1,11 @@
+    using Microsoft.EntityFrameworkCore;
+    using TeleMed.Common;
     using TeleMed.Common.Extensions;
+    using TeleMed.Components;
+    using TeleMed.Data;
     using TeleMed.Data.Abstracts;
     using TeleMed.DTOs.Appointment;
+    using TeleMed.DTOs.GoogleMeet;
     using TeleMed.Repos.Abstracts;
     using TeleMed.Responses;
     using TeleMed.States;
@@ -45,13 +50,36 @@
                 ProviderId = appointmentDto.ProviderId,
                 AppointmentDate = appointmentDto.AppointmentDate.ToUniversalTime(),
                 AppointmentTime = appointmentDto.AppointmentTime,
-                AppointmentStatus = (int)AppointmentStatus.Scheduled
+                AppointmentStatus = (int)AppointmentStatus.Scheduled,
+                Status = true
             };
 
             appDbContext.Appointments.Add(appointment);
-            appDbContext.SaveChanges();
 
-        return new CustomResponses.AppointmentResponse(true, "Appointment created successfully");
+            try
+            {
+                var result = appDbContext.SaveChanges();
+                
+                if (result > 0)
+                {
+                    var meetingDto = new GoogleMeetRequestDto()
+                    {
+                        MeetingDateTime = CombineDateAndTime.Combine(appointmentDto.AppointmentDate, appointmentDto.AppointmentTime),
+                        PatientEmail = appDbContext.Patients.Find(appointment.PatientId)?.Email
+                    };
+                    
+                    UpdateAppointmentMeetingLink(appointment.Id, meetingDto);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                appDbContext.ChangeTracker.Clear();
+                //Log the exception
+                return new CustomResponses.AppointmentResponse(false, "An error occurred while creating the appointment");
+            }
+            
+            return new CustomResponses.AppointmentResponse(true, "Appointment created successfully");
     }
 
         public CustomResponses.AppointmentResponse UpdateAppointment(AppointmentDto appointmentDto)
@@ -87,7 +115,7 @@
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
-                where a.Id == appointmentId
+                where a.Id == appointmentId && a.Status == true
                 select new AppointmentDto()
                 {
                     Id = a.Id,
@@ -97,7 +125,8 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!
+                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!,
+                    MeetingLink = a.MeetingLink
                 };
             
             return query.FirstOrDefault() ?? null!;
@@ -108,6 +137,7 @@
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
+                where a.Status == true
                 select new AppointmentDto()
                 {
                     Id = a.Id,
@@ -117,7 +147,8 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!
+                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!,
+                    MeetingLink = a.MeetingLink
                 };
                 
             return query.ToList();
@@ -131,7 +162,7 @@
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
-                where a.PatientId == patientId
+                where a.PatientId == patientId && a.Status == true
                 select new AppointmentDto()
                 {
                     Id = a.Id,
@@ -141,7 +172,8 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(appointmentStatus, a.AppointmentStatus)!
+                    AppointmentStatus = Enum.GetName(appointmentStatus, a.AppointmentStatus)!,
+                    MeetingLink = a.MeetingLink
                 };
             
             return query.ToList();
@@ -152,7 +184,7 @@
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
-                where a.ProviderId == providerId
+                where a.ProviderId == providerId && a.Status == true
                 select new AppointmentDto()
                 {
                     Id = a.Id,
@@ -162,7 +194,8 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!
+                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!,
+                    MeetingLink = a.MeetingLink
                 };
             
             return query.ToList();
@@ -178,6 +211,12 @@
             
             appDbContext.Appointments.Update(appointment);
             appDbContext.SaveChanges();
+            
+            var meetingLink = appointment.MeetingLink;
+            if (!string.IsNullOrWhiteSpace(meetingLink))
+            {
+                new GoogleMeet().CancelGoogleMeet(meetingLink);
+            }
             
             return new CustomResponses.AppointmentResponse(true, "Appointment cancelled successfully");
         }
@@ -220,5 +259,18 @@
         private int GetPatientId(int userId)
         {
             return appDbContext.Patients.FirstOrDefault(p => p.UserId == userId)?.Id ?? 0;
+        }
+        
+        private async void UpdateAppointmentMeetingLink(int appointmentId, GoogleMeetRequestDto meetingDto)
+        {
+            //Need to Catch exceptions
+            var googleMeetLink = new GoogleMeet().GetGoogleMeetLink(meetingDto).Result;
+            if (string.IsNullOrWhiteSpace(googleMeetLink)) return;
+            var appointment = appDbContext.Appointments.Find(appointmentId);
+            appointment!.MeetingLink = googleMeetLink;
+                
+            const string propertyName = nameof(appointment.MeetingLink);
+            appDbContext.Entry(appointment).Property(propertyName).IsModified = true;
+            appDbContext.SaveChanges();
         }
     }
