@@ -50,7 +50,7 @@ namespace TeleMed.States
             {
                 new Claim(ClaimTypes.Email, claims.Email),
                 new Claim(ClaimTypes.Name, claims.Name),
-                new Claim(ClaimTypes.Role, claims.Role),
+                new Claim(ClaimTypes.Role, claims.Role.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, claims.UniqueId)
             }, "JwtAuth"));
         }

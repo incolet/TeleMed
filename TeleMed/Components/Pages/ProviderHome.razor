@@ -1,0 +1,91 @@
+﻿@page "/provider-dashboard"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using TeleMed.Common
+@using TeleMed.Common.Extensions
+@using TeleMed.DTOs.Appointment
+@using TeleMed.Models
+
+<PageTitle>Dashboard</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Welcome, @context.User.Identity!.Name</h2>
+                    <p>This is your dashboard.</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">Upcoming Appointments</div>
+                        <Grid @ref="@_grid"
+                              TItem="AppointmentDto"
+                              Class="table table-hover table-bordered table-striped"
+                              DataProvider="AppointmentDataProvider"
+                              AllowFiltering="false"
+                              Responsive="true">
+
+                            <GridColumn TItem="AppointmentDto" HeaderText="Patient Name" PropertyName="PatientName" Context="appointmentContext">
+                                @appointmentContext.PatientName
+                            </GridColumn>
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Date" PropertyName="AppointmentDate" Context="appointmentContext">
+                                @appointmentContext.AppointmentDate.ToLongDateString()
+                            </GridColumn>
+                            <GridColumn TItem="AppointmentDto" HeaderText="Appointment Time" PropertyName="AppointmentTime" Context="appointmentContext">
+                                @appointmentContext.AppointmentTime
+                            </GridColumn>
+                            
+                            
+                            <GridColumn TItem="AppointmentDto" HeaderText="Meeting Link" PropertyName="AppointmentTime" Context="appointmentContext">
+                                @if (CombineDateAndTime.Combine(@appointmentContext.AppointmentDate, @appointmentContext.AppointmentTime) < DateTime.Now.AddMinutes(10))
+                                {
+                                    <Button Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Size="Size.Small" Target="Target.Blank">Start Meeting</Button>
+                                }
+                                else
+                                { 
+                                    <Button Color="ButtonColor.Secondary" Size="Size.Small" TooltipTitle="Link Available 5 Minutes To Appointment" TooltipPlacement="TooltipPlacement.Right" Disabled="true">Start Meeting</Button>
+                                }
+                            </GridColumn>
+                        </Grid>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to access this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    
+    [Inject] protected ToastService? ToastService { get; set; }
+    
+    Grid<AppointmentDto> _grid = default!;
+
+    private ClaimsPrincipal? _user;
+    private List<AppointmentDto> _appointments = [];
+    
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    
+
+    private async Task<GridDataProviderResult<AppointmentDto>> AppointmentDataProvider(GridDataProviderRequest<AppointmentDto> request)
+    {
+        if (_appointments.Count > 0) return await Task.FromResult(request.ApplyTo(_appointments));
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        _user = (await customAuthStateProvider.GetAuthenticationStateAsync()).User;
+        var providerId = _user.FindFirstValue(ClaimTypes.NameIdentifier);
+        _appointments = await AppointmentsService.GetAppointmentsByProviderId(int.Parse(providerId ?? "0"));
+
+        return await Task.FromResult(request.ApplyTo(_appointments));
+    }
+
+}

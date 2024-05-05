@@ -6,30 +6,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using TeleMed.Data.Abstracts;
 using TeleMed.DTOs.Auth;
 using TeleMed.Repos.Abstracts;
+using TeleMed.Responses;
 using TeleMed.States;
 
 namespace TeleMed.Repos
 {
-    public class Account(AppDbContext appDbContext, IConfiguration config) : IAccount
+    public abstract class AAccount(IAppDbContext appDbContext, IConfiguration config) : IAccount
     {
-        public LoginResponse LoginAsync(LoginDto model)
-        {
+        public abstract LoginResponse LoginAsync(LoginDto model);
 
-            var findUser = GetUser(model.Email);
-            if (findUser.Id < 1) 
-                return new LoginResponse(false, "User doesn't exist");
-
-            if (!BCrypt.Net.BCrypt.Verify(model.Password, findUser.Password))
-                return new LoginResponse(false, "Email/Password not valid");
-            
-            var jwtToken = GenerateToken(findUser);
-
-            return new LoginResponse(true, "Login Success" , jwtToken);
-        }
-
-        private string GenerateToken(ApplicationUser user)
+        protected string GenerateToken(ApplicationUser user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -37,7 +26,7 @@ namespace TeleMed.Repos
             {
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
             var token = new JwtSecurityToken(
@@ -51,8 +40,13 @@ namespace TeleMed.Repos
 
         public (RegistrationResponse,int) RegisterAsync(RegisterDto model)
         {
-            var findUser =  GetUser(model.Email);
-            if (findUser.Id > 1) 
+            var loginDto = new LoginDto()
+            {
+                Email = model.Email,
+            };
+            var findUser =  GetUser(loginDto);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (findUser is not null) 
                 return (new RegistrationResponse(false, "User already exist"),findUser.Id);
 
             var newUser = new ApplicationUser()
@@ -65,18 +59,25 @@ namespace TeleMed.Repos
             };
             
             appDbContext.Users.Add(newUser);
-            appDbContext.SaveChangesAsync();
-            
+            appDbContext.SaveChanges();
+
             var recordId = newUser.Id;
             return (new RegistrationResponse(true, "Success"),recordId);
         }
 
-        public ApplicationUser GetUser(string email)
+        public ApplicationUser GetUser(LoginDto model)
         {
-           var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Email == email).Result;
+           var user = appDbContext.Users
+               .FirstOrDefaultAsync(e => e.Email == model.Email).Result;
 
            return user ?? null!;
         }
+        
+        public bool IsUserInRole(ApplicationUser user, int role)
+        {
+            return user.Role == role;
+        }
+        
         public ApplicationUser GetUser(int id)
         {
            var user = appDbContext.Users.FirstOrDefaultAsync(e => e.Id == id).Result;

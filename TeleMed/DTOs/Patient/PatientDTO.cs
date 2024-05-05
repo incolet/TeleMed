@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using TeleMed.States;
 
-namespace TeleMed.DTOs;
+namespace TeleMed.DTOs.Patient;
 
 public class PatientDto
 {
@@ -41,14 +42,18 @@ public class PatientDto
     
     [Required]
     [DataType(DataType.Date)]
-    public DateTime Dob { get; set; }
+    public DateTime Dob { get; set; } = DateTime.Now;
     
     [Required]
     [StringLength(50)]
+    [EmailAddress]
     public string Email { get; set; } = string.Empty;
     
     [Required]
     [StringLength(20)]
+    [RegularExpression(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$", ErrorMessage = "Invalid phone number")]
     public string Phone { get; set; } = string.Empty;
 
+    [Required]
+    public Gender Gender { get; set; }
 }

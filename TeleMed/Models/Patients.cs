@@ -41,6 +41,8 @@ public class Patients
     [Required]
     [StringLength(10)]
     public string ZipCode { get; set; } = string.Empty;
+
+    public int Gender { get; set; }
     
     [Required]
     [DataType(DataType.Date)]

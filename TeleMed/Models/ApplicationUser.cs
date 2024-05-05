@@ -15,9 +15,7 @@ namespace TeleMed.Models
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         [StringLength(50)]
         public string Email { get; set; } = string.Empty;
-        
-        [StringLength(10)]
-        public string Role { get; set; } = string.Empty;
+        public int Role { get; set; } = 1;
         
         [StringLength(50, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long")]
         public string Password { get; set; } = string.Empty;

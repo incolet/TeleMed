@@ -10,7 +10,14 @@
                 <a class="navbar-brand fw-bold" href="/dashboard">TeleMed</a>
             </div>
 
-            <a href="/logout" Color="ButtonColor.Primary" class="rounded text-decoration-none text-white bg-primary px-4 py-2">Logout</a>
+            @* <a href="/logout" Color="ButtonColor.Primary" class="rounded text-decoration-none text-white bg-primary px-4 py-2">Logout</a> *@
+            <Button Type="ButtonType.Link"
+                    To="/logout"
+                    Color="ButtonColor.Primary"
+                    Size="Size.ExtraSmall"
+                    class="rounded text-decoration-none text-white bg-primary px-4 py-2">
+                Logout
+            </Button>
         </div>
 
         <article class="content px-4">

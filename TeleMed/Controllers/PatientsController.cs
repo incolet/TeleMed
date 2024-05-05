@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TeleMed.DTOs;
+using TeleMed.DTOs.Patient;
 using TeleMed.Models;
 using TeleMed.Repos.Abstracts;
 using static TeleMed.Responses.CustomResponses;
@@ -11,9 +12,10 @@ namespace TeleMed.Controllers
     public class PatientsController(IPatient patientRepo) : ControllerBase
     {
         [HttpPost]
-        public PatientResponse CreatePatient([FromBody] PatientDto patientDto)
+        public IActionResult CreatePatient([FromBody] PatientRegisterDto patientDto)
         {
-            return patientRepo.CreatePatient(patientDto);
+            var result = patientRepo.CreatePatient(patientDto);
+            return Ok(result);
         }
 
         [HttpPut]

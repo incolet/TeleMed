@@ -1,17 +1,25 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-<CascadingAuthenticationState>
-    <Router AppAssembly="typeof(Program).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" >
-                <NotAuthorized>
-                    <h1>Sorry, you're not authorized to access this page.</h1>
-                </NotAuthorized>
-                <Authorizing>
-                    <h1>Authorizing...</h1>
-                </Authorizing>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="routeData" Selector="h1" />
-        </Found>
-    </Router>
-</CascadingAuthenticationState>
+﻿
+<ErrorBoundary>
+    <ChildContent>
+        <CascadingAuthenticationState>
+            <Router AppAssembly="typeof(Program).Assembly">
+                <Found Context="routeData">
+                    <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" >
+                        <NotAuthorized>
+                            <h1>Sorry, you're not authorized to access this page.</h1>
+                        </NotAuthorized>
+                        <Authorizing>
+                            <h1>Authorizing...</h1>
+                        </Authorizing>
+                    </AuthorizeRouteView>
+                    <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                </Found>
+            </Router>
+        </CascadingAuthenticationState>
+    </ChildContent>
+    <ErrorContent Context="ex">
+        <h1>An error occurred: @ex.Message</h1>
+        <p>Sorry, an error occurred while loading the page.</p>
+    </ErrorContent>
+</ErrorBoundary>
 

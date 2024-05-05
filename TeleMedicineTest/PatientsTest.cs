@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using TeleMed.Data.Abstracts;
-using TeleMed.DTOs;
 using TeleMed.DTOs.Auth;
+using TeleMed.DTOs.Patient;
 using TeleMed.Models;
 using TeleMed.Repos;
 using TeleMed.Repos.Abstracts;
 using TeleMed.Responses;
+using TeleMed.States;
 
 namespace TeleMedicineTest;
 
@@ -27,7 +28,7 @@ public class PatientsTest
     public void CreatePatient_ReturnsFailureResponse_WhenPatientDataIsNull()
     {
         // Arrange
-        PatientDto patientDto = null!;
+        PatientRegisterDto patientDto = null!;
 
         // Act
         var result = _patientRepo.CreatePatient(patientDto);
@@ -41,8 +42,9 @@ public class PatientsTest
     public void CreatePatient_ReturnsFailureResponse_WhenUserAlreadyExists()
     {
         // Arrange
-        var patientDto = new PatientDto { Email = "test@test.com" };
-        _accountRepo.Setup(a => a.GetUser(patientDto.Email)).Returns(new ApplicationUser() { Id = 2 });
+        var patientDto = new PatientRegisterDto { Email = "test@test.com" };
+        var loginDto = new LoginDto() { Email = patientDto.Email,Role = (int)UserRoles.Patient};
+        _accountRepo.Setup(a => a.GetUser(loginDto)).Returns(new ApplicationUser() { Id = 2,Role = (int)UserRoles.Patient});
 
         // Act
         var result = _patientRepo.CreatePatient(patientDto);
@@ -56,8 +58,10 @@ public class PatientsTest
     public void CreatePatient_ReturnsFailureResponse_WhenUnableToCreatePatient()
     {
         // Arrange
-        var patientDto = new PatientDto { Email = "test@test.com", LastName = "Test" };
-        _accountRepo.Setup(a => a.GetUser(patientDto.Email)).Returns(new ApplicationUser { Id = 0 });
+        var patientDto = new PatientRegisterDto { Email = "test@test.com", LastName = "Test" };
+        var loginDto = new LoginDto() { Email = patientDto.Email};
+        _accountRepo.Setup(a => a.GetUser(loginDto)).Returns(new ApplicationUser { Id = 0 });
+        _accountRepo.Setup(a=>a.IsUserInRole(It.IsAny<ApplicationUser>(),It.IsAny<int>())).Returns(true);
         _accountRepo.Setup(a => a.RegisterAsync(It.IsAny<RegisterDto>())).Returns((new CustomResponses.RegistrationResponse(false, "Unable to register"), 0));
 
         // Act
@@ -72,8 +76,10 @@ public class PatientsTest
     public void CreatePatient_ReturnsSuccessResponse_WhenPatientCreatedSuccessfully()
     {
         // Arrange
-        var patientDto = new PatientDto { Email = "test@test.com", LastName = "Test" };
-        _accountRepo.Setup(a => a.GetUser(patientDto.Email)).Returns(new ApplicationUser() { Id = 0 });
+        var patientDto = new PatientRegisterDto() { Email = "test@test.com", LastName = "Test" };
+        var loginDto = new LoginDto() { Email = patientDto.Email};
+        _accountRepo.Setup(a => a.GetUser(loginDto)).Returns(new ApplicationUser() { Id = 0 });
+        _accountRepo.Setup(a=>a.IsUserInRole(It.IsAny<ApplicationUser>(),It.IsAny<int>())).Returns(true);
         _accountRepo.Setup(a => a.RegisterAsync(It.IsAny<RegisterDto>())).Returns((new CustomResponses.RegistrationResponse(true, "Registered successfully"), 1));
 
         // Mocking the Patients DbSet
