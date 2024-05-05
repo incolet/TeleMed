@@ -292,7 +292,7 @@ public class AppointmentsTest
         
         var providers = new List<Providers>
         {
-            new Providers { Id = 1, FirstName = "John", LastName = "Doe" }
+            new Providers { UserId = 1,Id = 1, FirstName = "John", LastName = "Doe" }
         };
 
         var queryableProviders = providers.AsQueryable();
@@ -367,7 +367,7 @@ public class AppointmentsTest
         // Mocking the Patients DbSet
         var patients = new List<Patients>
         {
-            new Patients { Id = 1, FirstName = "Jane", LastName = "Doe" }
+            new Patients {UserId = 1,Id = 1, FirstName = "Jane", LastName = "Doe" }
         };
         var mockDbSetPatients = new Mock<DbSet<Patients>>();
         mockDbSetPatients.As<IQueryable<Patients>>().Setup(m => m.Provider).Returns(patients.AsQueryable().Provider);

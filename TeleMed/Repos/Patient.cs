@@ -1,6 +1,7 @@
 using TeleMed.Data.Abstracts;
 using TeleMed.DTOs;
 using TeleMed.DTOs.Auth;
+using TeleMed.DTOs.Patient;
 using TeleMed.Models;
 using TeleMed.Repos.Abstracts;
 using TeleMed.Responses;
@@ -12,7 +13,7 @@ namespace TeleMed.Repos;
 public class Patient(IAccount accountRepo, IAppDbContext appDbContext)
     : IPatient
 {
-    public CustomResponses.PatientResponse CreatePatient(PatientDto patientDto)
+    public CustomResponses.PatientResponse CreatePatient(PatientRegisterDto patientDto)
     {
         try
         {
@@ -24,17 +25,25 @@ public class Patient(IAccount accountRepo, IAppDbContext appDbContext)
                     Message = "Patient data is required"
                 };
             }
+            
+            var loginDto = new LoginDto
+            {
+                Email = patientDto.Email,
+                Password = patientDto.Password
+            };
 
-            var findUser = accountRepo.GetUser(patientDto.Email);
-            if (findUser.Id > 1)
+            var findUser = accountRepo.GetUser(loginDto);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (findUser is not null)
                 return (new CustomResponses.PatientResponse(false, "User already exist"));
 
             //Create User in the database
             var registerResponse = accountRepo.RegisterAsync(new RegisterDto
             {
                 Email = patientDto.Email,
-                Password = patientDto.LastName,
-                Role = nameof(UserRoles.Patient)
+                Password = patientDto.Password!,
+                Name = patientDto.FirstName,
+                Role = (int)UserRoles.Patient
             });
 
             if (!registerResponse.Item1.Flag || registerResponse.Item2 == 0)
@@ -53,6 +62,7 @@ public class Patient(IAccount accountRepo, IAppDbContext appDbContext)
                 FirstName = patientDto.FirstName,
                 MiddleName = patientDto.MiddleName,
                 LastName = patientDto.LastName,
+                Gender = (int)patientDto.Gender,
                 Email = patientDto.Email,
                 Phone = patientDto.Phone,
                 Address1 = patientDto.Address1,
@@ -60,7 +70,7 @@ public class Patient(IAccount accountRepo, IAppDbContext appDbContext)
                 City = patientDto.City,
                 State = patientDto.State,
                 ZipCode = patientDto.ZipCode,
-                Dob = patientDto.Dob
+                Dob = patientDto.Dob.Date.ToUniversalTime()
             };
 
             appDbContext.Patients.Add(newPatient);

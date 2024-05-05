@@ -179,8 +179,10 @@
             return query.ToList();
         }
 
-        public List<AppointmentDto> GetAppointmentsByProvider(int providerId)
+        public List<AppointmentDto> GetAppointmentsByProvider(int userId)
         {
+            var providerId = GetProviderId(userId);
+            var appointmentStatus = typeof(AppointmentStatus);
             var query = from a in appDbContext.Appointments
                 join p in appDbContext.Patients on a.PatientId equals p.Id
                 join pr in appDbContext.Providers on a.ProviderId equals pr.Id
@@ -194,7 +196,7 @@
                     PatientName = $"{p.FirstName}, {p.LastName}",
                     ProviderId = a.ProviderId,
                     ProviderName = $"{pr.FirstName}, {pr.LastName}",
-                    AppointmentStatus = Enum.GetName(typeof(AppointmentStatus), a.AppointmentStatus)!,
+                    AppointmentStatus = Enum.GetName(appointmentStatus, a.AppointmentStatus)!,
                     MeetingLink = a.MeetingLink
                 };
             
@@ -259,6 +261,11 @@
         private int GetPatientId(int userId)
         {
             return appDbContext.Patients.FirstOrDefault(p => p.UserId == userId)?.Id ?? 0;
+        }
+        
+        private int GetProviderId(int userId)
+        {
+            return appDbContext.Providers.FirstOrDefault(p => p.UserId == userId)?.Id ?? 0;
         }
         
         private async void UpdateAppointmentMeetingLink(int appointmentId, GoogleMeetRequestDto meetingDto)

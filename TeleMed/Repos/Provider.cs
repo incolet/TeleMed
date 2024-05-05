@@ -16,8 +16,13 @@ public class Provider (IAccount accountRepo, IAppDbContext appDbContext)
     {
         try
         {
-            var findUser = accountRepo.GetUser(providerDto.Email);
-            if (findUser.Id > 1)
+            var loginDto = new LoginDto
+            {
+                Email = providerDto.Email
+            };
+            var findUser = accountRepo.GetUser(loginDto);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (findUser is not null)
                 return (new CustomResponses.ProviderResponse(false, "User already exist"));
             
             //Create User in the database
@@ -25,7 +30,8 @@ public class Provider (IAccount accountRepo, IAppDbContext appDbContext)
             {
                 Email = providerDto.Email,
                 Password = providerDto.LastName,
-                Role = nameof(UserRoles.Provider)
+                Name = providerDto.FirstName,
+                Role = (int)UserRoles.Provider
             });
             
             if (!registerResponse.Item1.Flag || registerResponse.Item2 == 0)

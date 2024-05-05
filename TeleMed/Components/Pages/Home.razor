@@ -181,10 +181,10 @@
         
         if (result.Flag)
         {
-            await _modal?.HideAsync()!;
-            
-            ToastService?.Notify(new ToastMessage(ToastType.Success, result.Message));
             _appointments = await AppointmentsService.GetAppointmentsByPatientId(int.Parse(_user?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0"));
+            await _modal?.HideAsync()!;
+            ToastService?.Notify(new ToastMessage(ToastType.Success, result.Message));
+            await _grid.RefreshDataAsync();
         }
         else
         {

@@ -1,75 +1,227 @@
 ﻿@page "/register"
+@using TeleMed.Components.Layout
+@using TeleMed.DTOs.Auth
+@using TeleMed.DTOs.Patient
+@layout LoginLayout
 
-<div class="container ">
-    <div class="row justify-content-md-center d-flex align-items-center">
-        <div class="col-md-auto">
-            <form class="row g-3">
-                <div class="col-md-4">
-                    <label for="inputFirstName" class="form-label">First Name</label>
-                    <input type="text" class="form-control" id="inputFirstName">
-                </div>
-                <div class="col-md-4">
-                    <label for="inputMiddleName" class="form-label">Middle Name</label>
-                    <input type="text" class="form-control" id="inputMiddleName">
-                </div>
-                <div class="col-md-4">
-                    <label for="inputLastName" class="form-label">Last Name</label>
-                    <input type="text" class="form-control" id="inputLastName">
-                </div>
-                <div class="col-md-4">
-                    <label for="inputGender" class="form-label">Gender</label>
-                    <select id="inputGender" class="form-select">
-                        <option selected>Choose...</option>
-                        <option>...</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="inputRace" class="form-label">Race</label>
-                    <select id="inputRace" class="form-select">
-                        <option selected>Choose...</option>
-                        <option>...</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="inputStatus" class="form-label">Status</label>
-                    <select id="inputStatus" class="form-select">
-                        <option selected>Choose...</option>
-                        <option>...</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <label for="inputAddress" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St">
-                </div>
-                <div class="col-12">
-                    <label for="inputAddress2" class="form-label">Address 2</label>
-                    <input type="text" class="form-control" id="inputAddress2" placeholder="Apartment, studio, or floor">
-                </div>
+@rendermode InteractiveServer
+
+
+<ErrorBoundary>
+    <ChildContent>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
                 <div class="col-md-6">
-                    <label for="inputCity" class="form-label">City</label>
-                    <input type="text" class="form-control" id="inputCity">
+                    <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                        <div class="card-body">
+                            <h5 class="card-title">Register</h5>
+                            <EditForm Model="@Register" OnValidSubmit="RegisterClicked">
+                                <DataAnnotationsValidator />
+                                <div class="col-md-4">
+                                    <label for="inputFirstName" class="form-label">First Name</label>
+                                    <InputText class="form-control" id="inputFirstName" @bind-Value="Register.FirstName"/>
+                                    <ValidationMessage For="@(() => Register.FirstName)" class="text-danger" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="inputMiddleName" class="form-label">Middle Name</label>
+                                    <InputText class="form-control" id="inputMiddleName" @bind-Value="Register.MiddleName"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="inputLastName" class="form-label">Last Name</label>
+                                    <InputText class="form-control" id="inputLastName" @bind-Value="Register.LastName" />
+                                    <ValidationMessage For="@(() => Register.LastName)" class="text-danger" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="inputGender" class="form-label">Gender</label>
+                                    <InputSelect id="inputGender" class="form-select" @bind-Value="Register.Gender">
+                                        <option value="">
+                                            Select Gender ...
+                                        </option>
+                                        <option value="@Gender.Male">@nameof(Gender.Male)</option>
+                                        <option value="@Gender.Female">@nameof(Gender.Female)</option>
+                                        <option value="@Gender.Unknown">Other</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => Register.Gender)" class="text-danger" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="inputDob" class="form-label">DateOfBirth</label>
+                                    <InputDate 
+                                        class="form-control" 
+                                        @bind-Value="Register.Dob" 
+                                        id="inputDob" 
+                                        min="@MinDate" 
+                                        max="@MaxDate" />
+                                    <ValidationMessage For="@(() => Register.Dob)" class="text-danger" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="inputAddress" class="form-label">Address</label>
+                                    <InputText class="form-control" id="inputAddress" placeholder="1234 Main St" @bind-Value="Register.Address1" />
+                                    <ValidationMessage For="@(() => Register.Address1)" class="text-danger" />
+                                </div>
+                                <div class="col-12">
+                                    <label for="inputAddress2" class="form-label">Address 2</label>
+                                    <InputText class="form-control" id="inputAddress2" placeholder="Apartment, studio, or floor" @bind-Value="Register.Address2" />
+                                    <ValidationMessage For="@(() => Register.Address2)" class="text-danger" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inputCity" class="form-label">City</label>
+                                    <InputText class="form-control" id="inputCity" @bind-Value="Register.City" />
+                                    <ValidationMessage For="@(() => Register.City)" class="text-danger" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">State</label>
+                                    @if (_states.Any())
+                                    {
+                                        <InputSelect @bind-Value="Register.State" class="form-control">
+                                            @foreach (var state in _states)
+                                            {
+                                                <option value="@state">@state</option>
+                                            }
+                                        </InputSelect>
+                                    }
+                                    else
+                                    {
+                                        <InputSelect @bind-Value="Register.State" >
+                                            <option value="">No State...</option>
+                                        </InputSelect>
+                                    }
+                                    <ValidationMessage For="@(() => Register.State)" class="text-danger" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="inputZip" class="form-label">Zip</label>
+                                    <InputText type="text" class="form-control" id="inputZip" @bind-Value="Register.ZipCode"/>
+                                    <ValidationMessage For="@(() => Register.ZipCode)" class="text-danger" />
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="emailInput" class="form-label">Email Address</label>
+                                    <InputText id="emailInput" @bind-Value="Register.Email" class="form-control" placeholder="Enter email" />
+                                    <ValidationMessage For="@(() => Register.Email)" class="text-danger" />
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="passwordInput" class="form-label">Password</label>
+                                    <InputText id="passwordInput" @bind-Value="Register.Password" class="form-control" type="password" placeholder="Password" />
+                                    <ValidationMessage For="@(() => Register.Password)" class="text-danger" />
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="passwordInput" class="form-label">Phone</label>
+                                    <InputText id="phoneInput" @bind-Value="Register.Phone" class="form-control" type="number" />
+                                    <ValidationMessage For="@(() => Register.Phone)" class="text-danger" />
+                                </div>
+                                
+
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Register</button>
+                                </div>
+                                @* <ValidationSummary class="text-danger" /> *@
+                            </EditForm>
+                            <Spinner Class="me-3" Type="SpinnerType.Dots" Color="SpinnerColor.Primary" Size="SpinnerSize.Large" Visible="@_spinnerVisible" />
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label for="inputState" class="form-label">State</label>
-                    <select id="inputState" class="form-select">
-                        <option selected>Choose...</option>
-                        <option>...</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="inputZip" class="form-label">Zip</label>
-                    <input type="text" class="form-control" id="inputZip">
-                </div>
-                
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <p>Oops! Something went wrong. @exception.Message</p>
+    </ErrorContent>
+</ErrorBoundary>
 
 
 @code {
+    
+    public PatientRegisterDto Register { get; set; } = new ();
+    private bool _spinnerVisible;
+    private List<string> _states = [];
+    
+    private string MinDate { get; set; } = new DateTime(1900, 1, 1).ToString("yyyy-MM-dd");
+    private string MaxDate { get; set; } = DateTime.Now.ToString("yyyy-MM-dd");
+
+
+    protected override void OnInitialized()
+    {
+        _states =
+        [
+            "Alabama",
+            "Alaska",
+            "Arizona",
+            "Arkansas",
+            "California",
+            "Colorado",
+            "Connecticut",
+            "Delaware",
+            "Florida",
+            "Georgia",
+            "Hawaii",
+            "Idaho",
+            "Illinois",
+            "Indiana",
+            "Iowa",
+            "Kansas",
+            "Kentucky",
+            "Louisiana",
+            "Maine",
+            "Maryland",
+            "Massachusetts",
+            "Michigan",
+            "Minnesota",
+            "Mississippi",
+            "Missouri",
+            "Montana",
+            "Nebraska",
+            "Nevada",
+            "New Hampshire",
+            "New Jersey",
+            "New Mexico",
+            "New York",
+            "North Carolina",
+            "North Dakota",
+            "Ohio",
+            "Oklahoma",
+            "Oregon",
+            "Pennsylvania",
+            "Rhode Island",
+            "South Carolina",
+            "South Dakota",
+            "Tennessee",
+            "Texas",
+            "Utah",
+            "Vermont",
+            "Virginia",
+            "Washington",
+            "West Virginia",
+            "Wisconsin",
+            "Wyoming"
+        ];
+        base.OnInitialized();
+    }
+    
+    private async void RegisterClicked()
+    {
+        _spinnerVisible = true;
+        var response = await PatientsService.CreatePatient(Register);
+        if (!response.Flag)
+        {
+            await js.InvokeVoidAsync("alert", response.Message);
+            _spinnerVisible = false;
+            return;
+        }
+        var login = new LoginDto
+        {
+            Email = Register.Email,
+            Password = Register.Password
+        };
+        
+        var res = await AccountsService.LoginAsync(login);
+        if (!response.Flag)
+        {
+            await js.InvokeVoidAsync("alert", response.Message);
+            return;
+        }
+        
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customAuthStateProvider.UpdateAuthenticationState(res.JWTToken);
+        NavManager.NavigateTo("/dashboard",forceLoad: true);
+    }
 
 }

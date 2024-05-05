@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject IHostEnvironment HostEnvironment
 
 <div class="page">
 
@@ -15,11 +16,32 @@
     
 </div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
+<div id="blazor-error-ui" data-nosnippet>
+    An error has occurred: @ErrorMessage
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
 
 @code {
+    string ErrorMessage { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // Subscribe to the OnUnhandledException event
+        CircuitHandler.OnUnhandledException += HandleException;
+    }
+
+    private void HandleException(object sender, UnhandledExceptionEventArgs e)
+    {
+        // Store the error message
+        ErrorMessage = e.ExceptionObject.ToString();
+        StateHasChanged(); // Notify Blazor the state has changed
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from the OnUnhandledException event
+        CircuitHandler.OnUnhandledException -= HandleException;
+    }
 }

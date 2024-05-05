@@ -35,4 +35,11 @@ class AppointmentsService(
         var result = await response.Content.ReadFromJsonAsync<List<DateTime>>();
         return result!;
     }
+    
+    public async Task<List<AppointmentDto>> GetAppointmentsByProviderId(int providerId)
+    {
+        var response =  HttpClient.ExtSendRequestAsyncNoBody(new HttpRequestMessage(HttpMethod.Get,$"{_baseUrl}/provider/{providerId}")).Result;
+        var result = await response.Content.ReadFromJsonAsync<List<AppointmentDto>>();
+        return result!;
+    }
 }
