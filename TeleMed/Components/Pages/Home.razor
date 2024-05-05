@@ -41,16 +41,25 @@
                             
                             <GridColumn TItem="AppointmentDto" HeaderText="Meeting Link" PropertyName="AppointmentTime" Context="appointmentContext">
                                 @* <Button Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Target="Target.Blank">Start Meeting</Button> *@
-                                @if (CombineDateAndTime.Combine(@appointmentContext.AppointmentDate, @appointmentContext.AppointmentTime) < DateTime.Now.AddMinutes(10))
-                                {
-                                    <Button Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Size="Size.Small" Target="Target.Blank">Start Meeting</Button>
-                                }
-                                else
-                                { 
-                                    <Button Color="ButtonColor.Secondary" Size="Size.Small" TooltipTitle="Link Available 5 Minutes To Appointment" TooltipPlacement="TooltipPlacement.Right" Disabled="true">Start Meeting</Button>
-                                    
-                                
-                                }
+                                <div class="d-flex gap-3">
+                                    <div>
+                                        @if (CombineDateAndTime.Combine(@appointmentContext.AppointmentDate, @appointmentContext.AppointmentTime) < DateTime.Now.AddMinutes(10))
+                                        {
+                                            <Button class="mr-5" Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Primary" Size="Size.Small" Target="Target.Blank">Start Meeting</Button>
+                                        }
+                                        else
+                                        {
+                                            <Button Color="ButtonColor.Secondary" Size="Size.Small" TooltipTitle="Link Available 5 Minutes To Appointment" TooltipPlacement="TooltipPlacement.Right" Disabled="true">Start Meeting</Button>
+
+
+                                        }
+                                    </div>
+                                    <div>
+                                        <Button class="ml-5" Type="ButtonType.Link" To="@appointmentContext.MeetingLink" Color="ButtonColor.Danger" Size="Size.Small" Target="Target.Blank"><i class="fa-solid fa-xmark"></i></Button>
+
+                                    </div>
+                                </div>
+                              
                             </GridColumn>
                         </Grid>
                     </div>
